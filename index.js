@@ -43,6 +43,7 @@ async function run() {
             const newToy = req.body;
             console.log(newToy)
             const result = await myToysCollection.insertOne(newToy)
+            const totalToys=await toyCollection.insertOne(newToy);
         })
         app.get('/my-toys', async (req, res) => {
             // const query=(req.query.email)
@@ -61,6 +62,14 @@ async function run() {
             const result=await toyCollection.findOne(query);
             console.log(result)
             res.send(result);
+        })
+
+        app.delete('/toys/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('idddd',id);
+             const query = { _id: new ObjectId(id) }
+             const result = await myToysCollection.deleteOne(query);
+             res.send(result)
         })
 
         // Send a ping to confirm a successful connection
