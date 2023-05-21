@@ -35,8 +35,8 @@ async function run() {
         const myToysCollection = client.db('toyCollection').collection('myToys');
 
         app.get('/toys', async (req, res) => {
-            const result = await toyCollection.find().toArray();
-            // console.log(result)
+            const limit = parseInt(req.query.limit) || 20; // Get the limit from the query parameters or default to 20
+            const result = await toyCollection.find().limit(limit).toArray();
             res.send(result)
         })
 
@@ -49,40 +49,38 @@ async function run() {
             const totalToys = await toyCollection.insertOne(newToy);
         })
         app.get('/my-toys', async (req, res) => {
-           
-             const {sort} = req.query;
-             let query = {};
-             if (req.query?.email) {
-                 query = { sellerEmail: req.query.email }
-             }
-             let sortOption={}; 
-             if(sort==='asc')
-             sortOption={price:1}; 
-             if(sort==='desc')
-             sortOption={price:-1}; 
-             if(sort==='asc' || sort==='desc')
-             {
-                const result=await myToysCollection.find().sort(sortOption).toArray();
+
+            const { sort } = req.query;
+            let query = {};
+            if (req.query?.email) {
+                query = { sellerEmail: req.query.email }
+            }
+            let sortOption = {};
+            if (sort === 'asc')
+                sortOption = { price: 1 };
+            if (sort === 'desc')
+                sortOption = { price: -1 };
+            if (sort === 'asc' || sort === 'desc') {
+                const result = await myToysCollection.find().sort(sortOption).toArray();
                 res.send(result)
-             }
-             else
-             {
-                 const result=await myToysCollection.find().toArray()
-                 console.log(result)
-                 res.send(result)
-             }
+            }
+            else {
+                const result = await myToysCollection.find().toArray()
+                console.log(result)
+                res.send(result)
+            }
         })
-        
 
 
-        app.get('/myToys',async(req,res)=>{
-            const {category}=req.query; 
+
+        app.get('/myToys', async (req, res) => {
+            const { category } = req.query;
             const result = await myToysCollection.find({ subcategory: category }).toArray();
-            console.log(category,result)
+            console.log(category, result)
             res.send(result)
-            
+
         })
-        
+
         app.get('/toy-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -109,7 +107,7 @@ async function run() {
         app.put('/toys:id', async (req, res) => {
             const id = req.params.id;
             console.log(req.body)
-            
+
         })
 
         // Send a ping to confirm a successful connection
