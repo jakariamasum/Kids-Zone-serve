@@ -34,6 +34,7 @@ async function run() {
         const toyCollection = client.db('toyCollection').collection('toys');
         const myToysCollection = client.db('toyCollection').collection('myToys');
 
+        //handle get all toy information from db
         app.get('/toys', async (req, res) => {
             const limit = parseInt(req.query.limit) || 20; // Get the limit from the query parameters or default to 20
             const result = await toyCollection.find().limit(limit).toArray();
@@ -42,12 +43,15 @@ async function run() {
 
 
 
+        //handle add toys information in db
         app.post('/my-toys', async (req, res) => {
             const newToy = req.body;
             console.log(newToy)
             const result = await myToysCollection.insertOne(newToy)
             const totalToys = await toyCollection.insertOne(newToy);
         })
+
+        //handle sorting based on price 
         app.get('/my-toys', async (req, res) => {
 
             const { sort } = req.query;
@@ -60,69 +64,62 @@ async function run() {
                 sortOption = { price: 1 };
             if (sort === 'desc')
                 sortOption = { price: -1 };
-            if (sort === 'asc' || sort === 'desc') {
                 const result = await myToysCollection.find().sort(sortOption).toArray();
                 res.send(result)
-            }
-            else {
-                const result = await myToysCollection.find().toArray()
-                console.log(result)
-                res.send(result)
-            }
+            
+            
         })
 
 
 
+        //handle get all my toys information
         app.get('/myToys', async (req, res) => {
             const { category } = req.query;
             const result = await myToysCollection.find({ subcategory: category }).toArray();
-            console.log(category, result)
             res.send(result)
 
         })
 
+        //handle get toy details by id
         app.get('/toy-details/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await toyCollection.findOne(query);
-            console.log(result)
             res.send(result);
         })
         app.get('/my-toy/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await myToysCollection.findOne(query);
-            // console.log(result)
             res.send(result);
         })
 
+        //handle delete to delete a toy information
         app.delete('/toys/:id', async (req, res) => {
             const id = req.params.id;
-            // console.log('idddd', id);
             const query = { _id: new ObjectId(id) }
             const result = await myToysCollection.deleteOne(query);
             res.send(result)
         })
 
 
-        app.put("/api/toys/:id", async (req, res) => {
+        // Handle PUT request to update toy information
+        app.put("/toys/:id", async(req, res) => {
             const toyId = req.params.id;
+            console.log(toyId)
             const { price, quantity, description } = req.body;
-          
-              const updatedToy = await myToysCollection.findByIdAndUpdate(
-                toyId,
-                { price, quantity, description },
-                { new: true }
-              );
-              res.json(updatedToy);
-            
-              });
+            const filter = { _id: new ObjectId(toyId) };
+            const updateDoc = {
+                $set: {
+                    price: price,
+                    quantity:quantity,
+                    description:description
+                },
+            };
+            const result = await myToysCollection.updateOne(filter, updateDoc);
 
-        // app.put('/toys:id', async (req, res) => {
-        //     const id = req.params.id;
-        //     console.log(req.body)
+        });
 
-        // })
 
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
