@@ -33,6 +33,7 @@ async function run() {
 
         const toyCollection = client.db('toyCollection').collection('toys');
         const myToysCollection = client.db('toyCollection').collection('myToys');
+        const myCartsCollection = client.db('toyCollection').collection('carts');
 
         //handle get all toy information from db
         app.get('/toys', async (req, res) => {
@@ -50,6 +51,11 @@ async function run() {
             const result = await myToysCollection.insertOne(newToy)
             const totalToys = await toyCollection.insertOne(newToy);
         })
+        app.post('/addcart', async (req, res) => {
+            const newToy = req.body;
+            console.log(newToy)
+            const totalToys = await myCartsCollection.insertOne(newToy);
+        })
 
         //handle sorting based on price 
         app.get('/my-toys', async (req, res) => {
@@ -64,10 +70,27 @@ async function run() {
                 sortOption = { price: 1 };
             if (sort === 'desc')
                 sortOption = { price: -1 };
-                const result = await myToysCollection.find().sort(sortOption).toArray();
+                const result = await myToysCollection.find(query).sort(sortOption).toArray();
                 res.send(result)
             
             
+        })
+        app.get('/carts', async (req, res) => {
+
+            const { sort } = req.query;
+            let query = {};
+            if (req.query?.email) {
+                query = { userEmail: req.query.email }
+            }
+            let sortOption = {};
+            if (sort === 'asc')
+                sortOption = { price: 1 };
+            if (sort === 'desc')
+                sortOption = { price: -1 };
+                const result = await myCartsCollection.find(query).sort(sortOption).toArray();
+                res.send(result)
+            
+            console.log(result)
         })
 
 
@@ -75,7 +98,7 @@ async function run() {
         //handle get all my toys information
         app.get('/myToys', async (req, res) => {
             const { category } = req.query;
-            const result = await myToysCollection.find({ subcategory: category }).toArray();
+            const result = await toyCollection.find({ subcategory: category }).toArray();
             res.send(result)
 
         })
@@ -106,7 +129,7 @@ async function run() {
         // Handle PUT request to update toy information
         app.put("/toys/:id", async(req, res) => {
             const toyId = req.params.id;
-            console.log(toyId)
+            // console.log(toyId)
             const { price, quantity, description } = req.body;
             const filter = { _id: new ObjectId(toyId) };
             const updateDoc = {
